@@ -8,7 +8,7 @@ router.post('/tasks', async (req, res) => {
 
     try {
         await task.save()
-        res.status(201).send()
+        res.status(201).send(task)
     } catch (error) {
         res.send(400).send(error)
     }
@@ -35,6 +35,31 @@ router.get('/tasks/:id', async (req, res) => {
         res.send(task)
     } catch (error) {
         res.status(500).send()
+    }
+})
+
+router.patch('/tasks/:id', async (req, res) => {
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['description', 'completed']
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+
+    if(!isValidOperation) {
+        return res.status(400).send({ error: 'Invalid updates' })
+    }
+
+    try {
+        const task = await Task.findById(req.params.id)
+        if(!task) {
+            return res.status(404).send()
+        }
+
+        updates.forEach((update) => task[update] = req.body[update])
+
+        task.save()
+
+        res.status(200).send(task)
+    } catch (e) {
+        res.status(404).send()
     }
 })
 
